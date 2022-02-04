@@ -7,202 +7,255 @@ struct _listNode{
 };
 typedef struct _listNode ListNode;
 
-void printList(ListNode *head);
-void deleteList(ListNode **ptrHead);
-ListNode* findNode(ListNode *cur, int i);
-int insertNode(ListNode **ptrHead, int i, int value);
-void triPartition(ListNode** head, int pivot);
+typedef struct _linkedList{
+    ListNode *head;
+    int size;
+}LinkedList;
+
+void printList(LinkedList ll);
+void deleteList(LinkedList* llptr);
+
+LinkedList rearrange (LinkedList ll);
 
 int main()
 {
-    ListNode *head = NULL, *temp;
-	int i = 0;
-	int pivot = 0;
+    LinkedList ll;
+    ll.head = NULL;
+    ll.size = 0;
 
-	scanf("%d",&pivot);
+    ListNode* temp;
+
+	int i = 0;
 
 	while (scanf("%d", &i)){
-		if (head == NULL){
-			head = (ListNode*) malloc(sizeof(ListNode));
-			temp = head;
+		if (ll.head == NULL){
+			ll.head = (ListNode*) malloc(sizeof(ListNode));
+			temp = ll.head;
 		}
 		else{
 			temp->next = (ListNode*) malloc(sizeof(ListNode));
 			temp = temp->next;
 		}
 		temp->item = i;
+		ll.size++;
 	}
 	temp->next = NULL;
 
-
-	triPartition(&head, pivot);
-	printList(head);
-	deleteList(&head);
-
+	ll = rearrange(ll);
+	printList(ll);
+    deleteList(&ll);
 	return 0;
 }
 
-void printList(ListNode *head){
-    while(head !=NULL){
-        printf("%d ",head->item);
-        head = head->next;
+void printList(LinkedList ll){
+    ListNode* temp = ll.head;
+
+    while(temp !=NULL){
+        printf("%d ",temp->item);
+        temp = temp->next;
     }
     printf("\n");
 }
-
-void deleteList(ListNode **ptrHead){
-    ListNode *cur = *ptrHead;
+void deleteList(LinkedList* llptr){
+    ListNode *cur = llptr->head;
     ListNode *temp;
     while (cur!= NULL) {
 		temp=cur->next;
 		free(cur);
 		cur=temp;
 	}
-	*ptrHead=NULL;
+	llptr->head=NULL;
+	llptr->size =0;
 }
 
-void triPartition(ListNode** head, int pivot){
+LinkedList rearrange (LinkedList ll)
+{
+	if (ll.head == NULL)
+	{
+		return ll;
+	}
+	if (ll.size == 1)
+	{
+		return ll;
+	}
+	// first rearrangement
+	int right;
+	right = 1;
+
+	// create first rearranged LinkedList
+	LinkedList Newll;
+	Newll.head = NULL;
+	Newll.size = ll.size;
+
+	// declaring two pointers to split the ll into Left and Right lists
+	ListNode *RightList = NULL;
+	ListNode *LeftList = NULL;
+	// temp is used to traverse the New ll
+	ListNode *temp = NULL;
+
+	// split into Left and Right Lists
+	// Left list is ll.head
+	// Right list is RightList
+	RightList = ll.head;
+	LeftList = ll.head;
 
 
-    ListNode *temp = NULL;
-    ListNode *tempstart = NULL;
-    ListNode *tempmiddle = NULL;
-    ListNode *tempend = NULL;
+    RightList = RightList->next;
+	for (int i = 0; (i < ll.size/2 - 1); i++)
+	{
+		RightList = RightList->next;
+		LeftList = LeftList->next;
+	}
+	LeftList->next = NULL;
 
-
-    ListNode *start = NULL;
-    ListNode *middle = NULL;
-    ListNode *end = NULL;
-
-    int startCount = 0;
-    int middleCount = 0;
-    int endCount = 0;
-
-    temp = *head;
-
-    while(temp != NULL)
+	// creating ll.size number of new nodes
+    for(int i = 0; i < ll.size; i++)
     {
+
+        if (right == 1)
         {
-            if (temp->item < pivot)
+			// for the first node
+            if(Newll.head == NULL)
             {
-                insertNode(&start, startCount, temp->item);
-                startCount++;
+				// point head to first node
+                Newll.head = (ListNode *)(malloc(sizeof(ListNode)));
+				// point temp to head
+                temp = Newll.head;
+				// place item from right list into the temp
+                temp->item = RightList->item;
+				// points to next node of right list
+                RightList = RightList->next;
+				// turns right into 0 to extract item from left list
+                right = 0;
             }
-            else if (temp->item == pivot)
-            {
-                insertNode(&middle, middleCount, temp->item);
-                middleCount++;
-            }
+			// for subsequent nodes taken from the right
             else
             {
-                insertNode(&end, endCount, temp->item);
-                endCount++;
-            }
-            temp = temp->next;
-        }
-    }
-
-
-
-        if (middle == NULL && end == NULL)
-        {
-            *head = start;
-        }
-        else if (start == NULL && end == NULL)
-        {
-            *head = middle;
-        }
-        else if (start == NULL && middle == NULL)
-        {
-            *head = end;
-        }
-        else if (middle == NULL)
-        {
-            temp = start;
-            for (int i = 1; i < startCount; i++)
-            {
+				// creating a new node and placing into temp->next
+                temp->next = (ListNode *)(malloc(sizeof(ListNode)));
+				// shifting temp into the new node
                 temp = temp->next;
+				// place item from left node into temp
+                temp->item = RightList->item;
+				// points to next node of right list
+                RightList = RightList->next;
+				// turns right into 0 to extract item from left list
+                right = 0;
             }
-            temp->next = end;
-            *head = start;
         }
-        else if (start == NULL)
-        {
-            temp = middle;
-            for (int i = 1; i < middleCount; i++)
-            {
-                temp = temp->next;
-            }
-            temp->next = end;
-            *head = middle;
-        }
+		// for extracting items from left list
         else
         {
-            temp = start;
-            for (int i = 1; i < startCount; i++)
-            {
-                temp = temp->next;
-            }
-            temp->next = middle;
+			// creating a new node and placing into temp->next
+            temp->next = (ListNode *)(malloc(sizeof(ListNode)));
+			// shifting temp into the new node
             temp = temp->next;
-
-
-            for (int i = 1; i < middleCount; i++)
-            {
-                temp = temp->next;
-            }
-            temp->next = end;
-            *head = start;
+			// place item from left node into temp
+            temp->item = ll.head->item;
+			// points to next node of left list
+            ll.head = ll.head->next;
+			// turns right into 1 to extract item from right list
+            right = 1;
         }
-
-
-
     }
 
+    temp->next = NULL;
 
 
 
 
-ListNode* findNode(ListNode *cur, int i)
-{
-	if (cur == NULL || i < 0)
+	// rearrange opposite way
+	int left = 1;
+	ListNode *temp2 = NULL;
+
+	// create New LinkedList
+	LinkedList Newll2;
+	Newll2.head = NULL;
+	Newll2.size = ll.size;
+
+	// split into Left and Right Lists
+	// Left list is Newll.head
+	// Right list is RightList
+	RightList = Newll.head;
+	LeftList = Newll.head;
+
+	// split n/2 left and n/2 or n/2 + 1 right
+    RightList = RightList->next;
+	for (int i = 0; (i < ll.size/2 - 1); i++)
 	{
-		return NULL;
+		RightList = RightList->next;
+		LeftList = LeftList->next;
 	}
-	while (i > 0)
-	{
-		cur = cur->next;
-		if (cur == NULL)
-		{
-			return NULL;
-		}
-		i--;
+	LeftList->next = NULL;
+	LeftList = Newll.head;
+	// creating ll.size number of new nodes
+    for(int i = 0; i < ll.size; i++)
+    {
+        if (left == 1)
+        {
+			// for the first node
+            if(Newll2.head == NULL)
+            {
+				// point head to first node
+                Newll2.head = (ListNode *)(malloc(sizeof(ListNode)));
+				// point temp2 to head
+                temp2 = Newll2.head;
+				// place item from left list into the temp2
+                temp2->item = LeftList->item;
+				// points to next node of left list
+                LeftList = LeftList->next;
+				// turns left into 0 to extract item from right list
+                left = 0;
+            }
+			// for subsequent nodes taken from the left
+            else
+            {
+                if (ll.size % 2 == 1 && i == ll.size -1)
+                {
+                    // creating a new node and placing into temp2->next
+                    temp2->next = (ListNode *)(malloc(sizeof(ListNode)));
+                    // shifting temp2 into the new node
+                    temp2 = temp2->next;
+                    // place item from right node into temp2
+                    temp2->item = RightList->item;
+                    // points to next node of right list
+                    RightList = RightList->next;
+                    // turns left into 1 to extract item from left list
+                    left = 1;
+                }
+                else
+                {
+                    // creating a new node and placing into temp2->next
+                    temp2->next = (ListNode *)(malloc(sizeof(ListNode)));
+                    // shifting temp2 into the new node
+                    temp2 = temp2->next;
+                    // place item from left node into temp2
+                    temp2->item = LeftList->item;
+                    // points to next node of left list
+                    LeftList = LeftList->next;
+                    // turns left into 0 to extract item from right list
+                    left = 0;
+                }
+            }
+        }
 
-	}
-	return cur;
-}
-
-int insertNode(ListNode **ptrHead, int i, int value)
-{
-	ListNode *cur = NULL;
-	ListNode *NewNode = NULL;
-
-	if(i == 0)
-	{
-		NewNode = (ListNode *)(malloc(sizeof(ListNode)));
-		NewNode->item = value;
-		NewNode->next = *ptrHead;
-		*ptrHead = NewNode;
-		return 1;
-	}
-
-	else if ((cur = findNode(*ptrHead, i-1)) != NULL)
-	{
-		NewNode = (ListNode *)(malloc(sizeof(ListNode)));
-		NewNode->item = value;
-		NewNode->next = cur->next;
-		cur->next = NewNode;
-		return 1;
-	}
-	return 0;
+		// for extracting items from right list
+        else
+        {
+			// creating a new node and placing into temp2->next
+            temp2->next = (ListNode *)(malloc(sizeof(ListNode)));
+			// shifting temp2 into the new node
+            temp2 = temp2->next;
+			// place item from right node into temp2
+            temp2->item = RightList->item;
+			// points to next node of right list
+            RightList = RightList->next;
+			// turns left into 1 to extract item from left list
+            left = 1;
+        }
+    }
+	// after list created, set the next node to be NULL
+    temp2->next = NULL;
+	// return rearranged LinkedList
+	return Newll2;
 }
