@@ -1,93 +1,138 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int numMountainPairs(CDblLinkedList CDLL)
+#define SIZE 1000
+
+enum ExpType {OPT,OPERAND};
+
+typedef struct _queueNode
 {
-// Warning: Printing unwanted or ill-formatted data to output will cause the test cases to fail
-    
+    int item;
+    enum ExpType type;
+    struct _queueNode *next;
+}QueueNode;
 
-// Write your code here
-    
-    int pairs = CDLL.size - 1;
-    if(CDLL.size == 2)
-    {
+typedef struct _queue{
+    int size;
+    QueueNode *head;
+    QueueNode *tail;
+}Queue;
+
+void enqueue (Queue *qptr, int item, enum ExpType type);
+int dequeue(Queue *qPtr);
+QueueNode* getFront(Queue q);
+int isEmptyQueue(Queue q);
+
+void expressionQ(char *infix, Queue* qPtr);
+void printExpQ(Queue* qPtr);
+
+int main()
+{
+    char infix[SIZE];
+    scanf("%[^\n]%*c",infix);
+
+    Queue inExpQ;
+    inExpQ.head = NULL;
+    inExpQ.tail = NULL;
+    inExpQ.size = 0;
+
+    expressionQ(infix,&inExpQ);
+    printf("Output:\n");
+    printExpQ(&inExpQ);
+
+    return 0;
+}
+
+void enqueue (Queue *qPtr, int item, enum ExpType type)
+{
+    QueueNode *newNode;
+    newNode = (QueueNode*) malloc(sizeof(QueueNode));
+    newNode->item = item;
+    newNode->type = type;
+    newNode->next = NULL;
+
+    if(isEmptyQueue(*qPtr))
+        qPtr->head = newNode;
+    else
+        qPtr->tail->next = newNode;
+
+    qPtr->tail =newNode;
+    qPtr->size++;
+
+}
+int dequeue(Queue *qPtr)
+{
+    if(qPtr == NULL || qPtr->head ==NULL)
+        return 0;
+    else{
+        QueueNode *temp = qPtr->head;
+        qPtr->head = qPtr->head->next;
+
+        if(qPtr->head == NULL)
+            qPtr->tail = NULL;
+
+        free(temp);
+        qPtr->size--;
         return 1;
     }
-    else if (CDLL.size < 2)
-    {
-        return 0;
+}
+
+QueueNode* getFront(Queue q)
+{
+    return q.head;
+}
+
+int isEmptyQueue(Queue q){
+   if(q.size==0) return 1;
+    else return 0;
+}
+
+void printExpQ(Queue *qPtr){
+    if(qPtr==NULL) return;
+
+    QueueNode* temp = NULL;
+    temp = getFront(*qPtr);
+
+    while(temp!=NULL){
+        if(temp->type == OPERAND)
+            printf(" %d ",temp->item);
+        else
+            printf(" %c ",(char)(temp->item));
+        dequeue(qPtr);
+        temp = getFront(*qPtr);
     }
-    CDblListNode *headPtr = NULL;
-    CDblListNode *start = NULL;
-    CDblListNode *end = NULL;
+    printf("\n");
 
-    CDblListNode *leftPtr = NULL;
-    CDblListNode *rightPtr = NULL;
+}
 
-    start = CDLL.head;
-    headPtr = CDLL.head;
 
-    int length = CDLL.size;
-    int left_visible = 1;
-    int right_visible = 1;
 
-    for (int i = 0; i < length - 2; i++)
+void expressionQ(char *infix, Queue* qPtr)
+{
+    int length = strlen(infix);
+
+    for(int i = 0; i < length; i++)
     {
-         end = start->next;
-         end = end->next;
-
-        while(end != headPtr)
+        if (infix[i] == ' ')
         {
-            if (start->item >= end->item)
-            {
-                leftPtr = end->pre;
-                rightPtr = end->next;
-                while (leftPtr != start)
-                {
-                    if (leftPtr->item > end->item)
-                    {
-                        left_visible = 0;
-                    }
-                    leftPtr = leftPtr->pre; 
-                }
-                while (rightPtr != start)
-                {
-                    if(rightPtr->item > end->item)
-                    {
-                        right_visible = 0;
-                    }
-                    rightPtr = rightPtr->next;
-                }
-            }
-            else 
-            {
-                leftPtr = start->pre;
-                rightPtr = start->next;
-                while (leftPtr != end)
-                {
-                    if (leftPtr->item > start->item)
-                    {
-                        left_visible = 0;
-                    }
-                    leftPtr = leftPtr->pre; 
-                }
-                while (rightPtr != end)
-                {
-                    if(rightPtr->item > start->item)
-                    {
-                        right_visible = 0;
-                    }
-                    rightPtr = rightPtr->next;
-                }
-            }
-        
-            if(left_visible == 1 || right_visible == 1)
-            {
-                pairs++;
-            }
-            left_visible = 1;
-            right_visible = 1;
-            end = end->next;
+            continue;
         }
-        start = start->next;
+        else if (infix[i] >= 48 && infix[i] <= 57)
+        {
+            int number = 0;
+            while (infix[i] >= 48 && infix[i] <= 57)
+            { 
+                number = number * 10 + ((int)(infix[i] - 48));
+                i++;
+            }
+            i--;
+            enqueue(qPtr, number, OPERAND);
+        }
+
+        else if (infix[i] == '+' || infix[i] == '-' || infix[i] == '*' || infix[i] == '/' || infix[i] == '%' || infix[i] == '(' || infix[i] == ')')
+        {
+            enqueue(qPtr, infix[i], OPT);
+        }
     }
-    return pairs;
 }
